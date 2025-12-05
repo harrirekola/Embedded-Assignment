@@ -1,0 +1,33 @@
+# AVR build artifacts
+build/
+*.o
+*.obj
+*.elf
+*.hex
+*.map
+*.lst
+*.lss
+*.d
+*.a
+*.eep
+*.bin
+*.srec
+*.s19
+
+# PlatformIO/Arduino (if used locally)
+.pio/
+.pioenvs/
+.piolibdeps/
+.arduino*
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+/.vs/
+*.swp
+*.tmp
+*.log
+~$*
+*.bak
