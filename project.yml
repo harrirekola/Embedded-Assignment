@@ -1,0 +1,37 @@
+:project:
+  :use_exceptions: FALSE
+  :use_test_preprocessor: TRUE
+  :use_auxiliary_dependencies: TRUE
+  :build_root: build
+  :release_build: TRUE
+  :test_file_prefix: test_
+  :which_ceedling: gem
+  :compile_threads: 1
+
+:paths:
+  :test:
+    - +:tests/**
+    - -:tests/support
+    - -:tests/unity
+  :source:
+    - src/**
+  :include:
+    - src/app
+    - src/drivers
+    - src/hal
+    - src/platform
+    - src/utils
+
+:defines:
+  :test:
+    - TEST_HOST
+
+:cmock:
+  :mock_prefix: mock_
+  :when_no_prototypes: :warn
+  :enforce_strict_ordering: TRUE
+  :plugins:
+    - :ignore
+    - :callback
+    - :return_theres_no_magic
+  :treat_externs: :include
