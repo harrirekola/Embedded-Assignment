@@ -59,6 +59,7 @@ int main(void) {
     uart_write("I2C init done\r\n");
 
     tb6600_init();
+    tb6600_start(); // BUG tb6600_start was missing?
     servo_init();
     interrupts_init();
     actuate_init();

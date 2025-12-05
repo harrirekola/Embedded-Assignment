@@ -62,7 +62,7 @@ uint16_t decide_get_belt_mm_per_s(void) {
 
 // Inlined router
 TargetPosition decide_route(Color color, LengthClass cls) {
-    if (cls != LEN_SMALL) {
+    if (cls == LEN_NOT_SMALL) { // BUG, use LEN_NOT_SMALL instead of LEN_SMALL and ==
         return PASS_THROUGH;
     }
     switch (color) {
@@ -118,7 +118,7 @@ bool decide_schedule(TargetPosition pos, uint32_t detect_ms, uint16_t evt_id) {
     if (s_max_blocks_per_min) {
         if (s_window_start_ms == 0 || (detect_ms - s_window_start_ms) >= 60000U) { s_window_start_ms = detect_ms; s_blocks_in_window = 0; }
         if (s_blocks_in_window >= s_max_blocks_per_min) { log_schedule_reject(detect_ms, evt_id, "throughput"); return false; }
-        s_blocks_in_window++;
+        // s_blocks_in_window++; BUG increments before checking queue free slot
     }
 
     int8_t idx = find_free_slot();
@@ -131,6 +131,7 @@ bool decide_schedule(TargetPosition pos, uint32_t detect_ms, uint16_t evt_id) {
     s_schedule_queue[idx].active = 1;
     s_schedule_queue[idx].event_id = evt_id;
     s_last_due_ms = due;
+    s_blocks_in_window++; // Moved here since can fail in the if case above.
     log_schedule(detect_ms, pos, due, evt_id);
     return true;
 }
@@ -153,7 +154,7 @@ void decide_tick(uint32_t now_ms) {
     }
 
     // No due item found
-    if (best_i < 0) { // BUG!
+    if (best_i < 0) { // BUG! Was >
         return; 
     }
 
