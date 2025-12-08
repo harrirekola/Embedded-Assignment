@@ -118,3 +118,16 @@ Logs are compact, line‑oriented ASCII per `utils/log.c`, e.g.:
 Use a serial terminal or capture logs for offline parsing.
 
 
+## Installing ceedlings and running tests
+
+Install ruby and ceedlings:
+`brew install ruby`
+`gem install ceedling`
+
+Remember to config PATH variables!
+
+To run all tests:
+`ceedling test:all`
+
+To run module specific tests:
+`ceedling test:MODULE_NAME`
