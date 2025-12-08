@@ -17,10 +17,24 @@ void setUp(void) {
 
 void tearDown(void) {}
 
+// ########## tests for decide_route ##########
+
 void test_decide_route_Should_RouteRedSmall_To_Pos1(void) {
     TEST_ASSERT_EQUAL(POS1, decide_route(COLOR_RED, LEN_SMALL));
 }
 
+void test_decide_route_Should_RouteGreenSmall_To_Pos2(void) {
+    TEST_ASSERT_EQUAL(POS2, decide_route(COLOR_GREEN, LEN_SMALL));
+}
+
+void test_decide_route_Should_RouteBlueSmall_To_Pos3(void) {
+    TEST_ASSERT_EQUAL(POS3, decide_route(COLOR_BLUE, LEN_SMALL));
+}
+
 void test_decide_route_Should_PassThrough_NotSmall(void) {
     TEST_ASSERT_EQUAL(PASS_THROUGH, decide_route(COLOR_RED, LEN_NOT_SMALL));
+}
+
+void test_decide_route_Should_PassThrough_OtherColor(void) {
+    TEST_ASSERT_EQUAL(PASS_THROUGH, decide_route(COLOR_OTHER, LEN_SMALL));
 }
