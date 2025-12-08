@@ -59,7 +59,6 @@ int main(void) {
     uart_write("I2C init done\r\n");
 
     tb6600_init();
-    tb6600_start(); // BUG tb6600_start was missing?
     servo_init();
     interrupts_init();
     actuate_init();
@@ -74,6 +73,7 @@ int main(void) {
     // value back to Decide so length math matches real motion.
     tb6600_set_speed(BELT_MM_PER_S);
     decide_set_belt_mm_per_s(tb6600_get_speed_mm_per_s());
+    tb6600_start(); // BUG tb6600_start was missing?
 
     counters_reset();
     const Counters* c0 = counters_get();
