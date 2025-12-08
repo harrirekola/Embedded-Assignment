@@ -38,3 +38,49 @@ void test_decide_route_Should_PassThrough_NotSmall(void) {
 void test_decide_route_Should_PassThrough_OtherColor(void) {
     TEST_ASSERT_EQUAL(PASS_THROUGH, decide_route(COLOR_OTHER, LEN_SMALL));
 }
+
+// ########## tests for throughput guardrail ##########
+
+void test_guardrail_Should_Reject_IfTooManyBlocks(void) {
+    decide_set_max_blocks_per_min(2);
+
+    // Ignore logging
+    log_schedule_Ignore();
+    log_schedule_reject_Ignore();
+
+    // 1st block: accepted
+    TEST_ASSERT_TRUE(decide_schedule(POS1, 1000, 1));
+    
+    // 2nd block: accepted
+    TEST_ASSERT_TRUE(decide_schedule(POS1, 2000, 2));
+    
+    // 3rd block: should be REJECTED due to throughput limit
+    log_schedule_reject_Expect(3000, 3, "throughput");
+    TEST_ASSERT_FALSE(decide_schedule(POS1, 3000, 3));
+}
+
+// ########## tests min spacing guardrail ##########
+
+void test_Requirements_Guardrail_MinSpacing(void) {
+    decide_set_min_spacing_ms(500); 
+
+    // Simulate that we just fired at T=1000
+    // Run a valid cycle first to set internal state
+    actuate_fire_Expect(POS1); 
+    log_schedule_Ignore(); 
+    log_actuate_Ignore();
+    decide_schedule(POS1, 0, 1);
+    decide_tick(1000);
+
+    // Next item is due at 1200
+    // 1200 < (1000 + 500) -> violates spacing
+    decide_schedule(POS1, 500, 2);
+    // Should NOT fire
+    decide_tick(1200);
+    
+    // Tick at 1600
+    // 1600 > (1000 + 500) -> now valid and should fire
+    actuate_fire_Expect(POS1);
+    log_actuate_Ignore();
+    decide_tick(1600);
+}
