@@ -33,4 +33,6 @@
   :plugins:
     - :ignore
     - :callback
+    - :expect_any_args
+    - :return_thru_ptr
   :treat_externs: :include
