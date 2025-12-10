@@ -17,17 +17,18 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <avr/io.h>
+
+//#include <avr/io.h>
 #include "platform/config.h"
 #include "platform/pins.h"
 //#include "utils/log.h"
+#include "app/sense.h"
 #include "hal/timers.h"
 #include "hal/gpio.h"
 #include "app/interrupts.h"
 #include "app/decide.h"
 #include "drivers/apds9960.h"
 #include "drivers/vl6180.h"
-#include "app/sense.h"
 #include "hal/uart.h"
 
 // Session tracking
@@ -73,7 +74,7 @@ static void compute_length(uint32_t t_enter, uint32_t t_exit, LengthInfo* out) {
     if (belt == 0) {
         belt = BELT_MM_PER_S; // fallback to compile-time default
     }
-    uint32_t mm = (dwell / 1000U) * (uint32_t)belt;
+    uint32_t mm = (dwell / 1000U) * (uint32_t)belt;  // BUG? This truncates (almost) all to zero
     out->length_mm = (uint16_t)mm;
     out->cls = (out->length_mm < LENGTH_SMALL_MAX_MM) ? LEN_SMALL : LEN_NOT_SMALL;
 }
@@ -192,9 +193,40 @@ int sense_poll(SenseResult* out) {
 
     // If active but quiet for too long, end session at last interrupt time
     if (session_should_end(now)) {
-        end_session(s_last_interrupt_ms);
+        end_session(s_last_interrupt_ms);  // BUG! should use current time instead of last interrupt
         finalize_result(out);
         return 1;
     }
     return 0;
 }
+
+
+//////////  TESTING  //////////
+// Expose internal functions
+void t_compute_length(uint32_t t_enter, uint32_t t_exit, LengthInfo* out) { compute_length(t_enter, t_exit, out); }
+void t_reset_color_accum(void) { reset_color_accum(); }
+void t_accumulate_color_sample(void) { accumulate_color_sample(); }
+void t_start_session(uint32_t now_ms) { start_session(now_ms); }
+void t_end_session(uint32_t now_ms) { end_session(now_ms); }
+bool t_session_should_end(uint32_t now_ms) { return session_should_end(now_ms); }
+void t_finalize_result(SenseResult* out) { finalize_result(out); }
+
+/// Functions for TESTING internal variables ///
+uint8_t get_session_active() { return s_session_active; }
+DetectEvent get_current_event() { return s_current_event; }
+uint32_t get_last_interrupt_ms() { return s_last_interrupt_ms; }
+uint32_t get_last_color_sample_ms() { return s_last_color_sample_ms; }
+uint16_t get_above_count() { return s_above_count; }
+uint32_t get_col_r_sum() { return s_col_r_sum; }
+uint32_t get_col_g_sum() { return s_col_g_sum; }
+uint32_t get_col_b_sum() { return s_col_b_sum; }
+uint32_t get_col_c_sum() { return s_col_c_sum; }
+uint16_t get_color_sample_count() { return s_color_sample_count; }
+
+void set_session_active(uint8_t i) { s_session_active = i; }
+void set_current_event(DetectEvent de) { s_current_event = de; }
+void set_last_interrupt(uint32_t i) { s_last_interrupt_ms = i; }
+void set_last_color_sample(uint32_t i) { s_last_color_sample_ms = i; }
+void set_above_count(uint16_t i) { s_above_count = i; }
+void set_col_sums(uint32_t i[]) { s_col_r_sum = i[0]; s_col_g_sum = i[1]; s_col_b_sum = i[2]; s_col_c_sum = i[3]; }
+void set_color_sample_count(uint16_t i) { s_color_sample_count = i; }
