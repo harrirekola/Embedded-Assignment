@@ -39,7 +39,7 @@ void test_decide_route_Should_PassThrough_OtherColor(void) {
     TEST_ASSERT_EQUAL(PASS_THROUGH, decide_route(COLOR_OTHER, LEN_SMALL));
 }
 
-// ########## tests for throughput guardrail ##########
+// ########## tests for guardrails ##########
 
 void test_guardrail_Should_Reject_IfTooManyBlocks(void) {
     decide_set_max_blocks_per_min(2);
@@ -59,9 +59,7 @@ void test_guardrail_Should_Reject_IfTooManyBlocks(void) {
     TEST_ASSERT_FALSE(decide_schedule(POS1, 3000, 3));
 }
 
-// ########## tests min spacing guardrail ##########
-
-void test_Requirements_Guardrail_MinSpacing(void) {
+void test_Guardrail_MinSpacing(void) {
     decide_set_min_spacing_ms(500); 
 
     // Simulate that we just fired at T=1000
@@ -108,3 +106,4 @@ void test_Logging_PASS_Rejection(void) {
     bool result = decide_schedule(PASS_THROUGH, 1000, 99);
     TEST_ASSERT_FALSE(result);
 }
+
