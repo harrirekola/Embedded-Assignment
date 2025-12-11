@@ -131,7 +131,7 @@ void test_RoutingAndTiming(void) {
     // Tick before due time -> should not fire
     decide_tick(1699); 
     
-    // Tick at due time -> Should fire POS1
+    // Tick at due time -> should fire POS1
     actuate_fire_Expect(POS1);
     log_actuate_Expect(t_expected_fire, POS1, 10);
     
