@@ -38,3 +38,102 @@ void test_decide_route_Should_PassThrough_NotSmall(void) {
 void test_decide_route_Should_PassThrough_OtherColor(void) {
     TEST_ASSERT_EQUAL(PASS_THROUGH, decide_route(COLOR_OTHER, LEN_SMALL));
 }
+
+// ########## tests for guardrails ##########
+
+void test_guardrail_Should_Reject_IfTooManyBlocks(void) {
+    decide_set_max_blocks_per_min(2);
+
+    // Ignore logging
+    log_schedule_Ignore();
+    log_schedule_reject_Ignore();
+
+    // 1st block: accepted
+    TEST_ASSERT_TRUE(decide_schedule(POS1, 1000, 1));
+    
+    // 2nd block: accepted
+    TEST_ASSERT_TRUE(decide_schedule(POS1, 2000, 2));
+    
+    // 3rd block: should be REJECTED due to throughput limit
+    log_schedule_reject_Expect(3000, 3, "throughput");
+    TEST_ASSERT_FALSE(decide_schedule(POS1, 3000, 3));
+}
+
+void test_Guardrail_MinSpacing(void) {
+    decide_set_min_spacing_ms(500); 
+
+    // Simulate that we just fired at T=1000
+    // Run a valid cycle first to set internal state
+    actuate_fire_Expect(POS1); 
+    log_schedule_Ignore(); 
+    log_actuate_Ignore();
+    decide_schedule(POS1, 0, 1);
+    decide_tick(1000);
+
+    // Next item is due at 1200
+    // 1200 < (1000 + 500) -> violates spacing
+    decide_schedule(POS1, 500, 2);
+    // Should NOT fire
+    decide_tick(1200);
+    
+    // Tick at 1600
+    // 1600 > (1000 + 500) -> now valid and should fire
+    actuate_fire_Expect(POS1);
+    log_actuate_Ignore();
+    decide_tick(1600);
+}
+
+// ########## tests for logging ##########
+
+void test_Logging_SCHEDULE(void) {
+    decide_set_belt_mm_per_s(100);
+
+    // Expect SCHEDULE log when a valid item is accepted
+    log_schedule_Expect(1000, POS2, 2900, 55); 
+    // 240mm dist / 100 speed = 2400ms
+    // 2400 - 500 advance = 1900 delay
+    // 1000 + 1900 = 2900 due
+
+    decide_schedule(POS2, 1000, 55);
+}
+
+void test_Logging_PASS_Rejection(void) {
+    // When routing returns PASS_THROUGH, decide_schedule rejects it
+
+    // Expect SCHEDULE_REJECT with reason pass-through
+    log_schedule_reject_Expect(1000, 99, "pass-through");
+
+    bool result = decide_schedule(PASS_THROUGH, 1000, 99);
+    TEST_ASSERT_FALSE(result);
+}
+
+// ########## integration test for routing and timing ##########
+
+void test_RoutingAndTiming(void) {
+    decide_set_belt_mm_per_s(100);
+
+    // TEST ROUTING
+    // Red + Small = POS1
+    TargetPosition route = decide_route(COLOR_RED, LEN_SMALL);
+    TEST_ASSERT_EQUAL(POS1, route);
+
+    // TEST TIMING
+    uint32_t t_detect = 1000;
+    uint32_t t_expected_fire = 1700;
+
+    // Expect logging
+    log_schedule_Expect(t_detect, POS1, t_expected_fire, 10);
+
+    // Schedule
+    decide_schedule(POS1, t_detect, 10);
+
+    // VERIFY ACTUATION
+    // Tick before due time -> should not fire
+    decide_tick(1699); 
+    
+    // Tick at due time -> should fire POS1
+    actuate_fire_Expect(POS1);
+    log_actuate_Expect(t_expected_fire, POS1, 10);
+    
+    decide_tick(t_expected_fire);
+}
