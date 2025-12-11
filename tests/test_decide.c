@@ -84,3 +84,27 @@ void test_Requirements_Guardrail_MinSpacing(void) {
     log_actuate_Ignore();
     decide_tick(1600);
 }
+
+// ########## tests for logging ##########
+
+void test_Logging_SCHEDULE(void) {
+    decide_set_belt_mm_per_s(100);
+
+    // Expect SCHEDULE log when a valid item is accepted
+    log_schedule_Expect(1000, POS2, 2900, 55); 
+    // 240mm dist / 100 speed = 2400ms
+    // 2400 - 500 advance = 1900 delay
+    // 1000 + 1900 = 2900 due
+
+    decide_schedule(POS2, 1000, 55);
+}
+
+void test_Logging_PASS_Rejection(void) {
+    // When routing returns PASS_THROUGH, decide_schedule rejects it
+
+    // Expect SCHEDULE_REJECT with reason pass-through
+    log_schedule_reject_Expect(1000, 99, "pass-through");
+
+    bool result = decide_schedule(PASS_THROUGH, 1000, 99);
+    TEST_ASSERT_FALSE(result);
+}
