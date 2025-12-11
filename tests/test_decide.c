@@ -107,3 +107,33 @@ void test_Logging_PASS_Rejection(void) {
     TEST_ASSERT_FALSE(result);
 }
 
+// ########## integration test for routing and timing ##########
+
+void test_RoutingAndTiming(void) {
+    decide_set_belt_mm_per_s(100);
+
+    // TEST ROUTING
+    // Red + Small = POS1
+    TargetPosition route = decide_route(COLOR_RED, LEN_SMALL);
+    TEST_ASSERT_EQUAL(POS1, route);
+
+    // TEST TIMING
+    uint32_t t_detect = 1000;
+    uint32_t t_expected_fire = 1700;
+
+    // Expect logging
+    log_schedule_Expect(t_detect, POS1, t_expected_fire, 10);
+
+    // Schedule
+    decide_schedule(POS1, t_detect, 10);
+
+    // VERIFY ACTUATION
+    // Tick before due time -> should not fire
+    decide_tick(1699); 
+    
+    // Tick at due time -> Should fire POS1
+    actuate_fire_Expect(POS1);
+    log_actuate_Expect(t_expected_fire, POS1, 10);
+    
+    decide_tick(t_expected_fire);
+}
