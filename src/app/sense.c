@@ -74,7 +74,7 @@ static void compute_length(uint32_t t_enter, uint32_t t_exit, LengthInfo* out) {
     if (belt == 0) {
         belt = BELT_MM_PER_S; // fallback to compile-time default
     }
-    uint32_t mm = (dwell / 1000U) * (uint32_t)belt;  // BUG? This truncates (almost) all to zero
+    uint32_t mm = dwell * (uint32_t)belt / 1000U;  // BUG? This truncated (almost) all to zero
     out->length_mm = (uint16_t)mm;
     out->cls = (out->length_mm < LENGTH_SMALL_MAX_MM) ? LEN_SMALL : LEN_NOT_SMALL;
 }
@@ -193,7 +193,7 @@ int sense_poll(SenseResult* out) {
 
     // If active but quiet for too long, end session at last interrupt time
     if (session_should_end(now)) {
-        end_session(s_last_interrupt_ms);  // BUG! should use current time instead of last interrupt
+        end_session(s_last_interrupt_ms);  // no bug: multiple interrupts while block present
         finalize_result(out);
         return 1;
     }
