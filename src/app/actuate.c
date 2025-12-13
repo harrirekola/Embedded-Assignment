@@ -10,7 +10,7 @@
  * - Servo pulses are applied by the servo driver; here we only choose pulse widths.
  * - Auto-centering runs from actuate_tick() using a deadline per channel.
  */
-#include <avr/io.h>
+//#include <avr/io.h>
 #include "platform/pins.h"
 #include "platform/config.h"
 #include "hal/timers.h"
